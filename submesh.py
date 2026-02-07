@@ -5,7 +5,7 @@ distribution_parameters = {
     "partition": True,
     "overlap_type": (DistributedMeshOverlapType.RIDGE, 1),
 }
-mesh = UnitSquareMesh(10, 10, distribution_parameters=distribution_parameters)
+mesh = UnitSquareMesh(2, 2, distribution_parameters=distribution_parameters)
 mdim = mesh.topological_dimension()
 assert mdim == 2
 
@@ -47,3 +47,21 @@ DG0 = FunctionSpace(mesh, "DG", 0)
 fDG0 = Function(DG0).interpolate(10.0 * (x - y)**2)  # valley along diagonal (regenerate f from scratch)
 fs2 = Function(subDG0).interpolate(fDG0)  # cross-mesh apparently works
 VTKFile("fooGOOD.pvd").write(fs2)
+
+# get coordinates of dofs for both DGT0 and subDG0
+def get_coordinates(msh, el_str):
+    v = VectorFunctionSpace(msh, el_str, 0)
+    X = assemble(interpolate(msh.coordinates,v))
+    return X.dat.data_ro
+
+crds_DGT0 = get_coordinates(mesh, "DGT")
+print(crds_DGT0)
+crds_subDG0 = get_coordinates(subm, "DG")
+print(crds_subDG0)
+
+# loop through each coordinate of DGT0 and assign value to correct index of DG0 function
+fs3 = Function(subDG0)
+for ((xi,yi),f_val) in zip(crds_DGT0,f.dat.data_ro):
+    i = np.argmin(np.sqrt((xi - crds_subDG0[:,0])**2 + (yi - crds_subDG0[:,1])**2))  # due to rounding error np.where(xi==crds_subDG0[:,0] ...) doesn't work
+    fs3.dat.data[i] = f_val
+VTKFile("fooBETTER.pvd").write(fs3)
