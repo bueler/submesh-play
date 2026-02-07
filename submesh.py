@@ -5,7 +5,7 @@ distribution_parameters = {
     "partition": True,
     "overlap_type": (DistributedMeshOverlapType.RIDGE, 1),
 }
-mesh = UnitSquareMesh(2, 2, distribution_parameters=distribution_parameters)
+mesh = UnitSquareMesh(10, 10, distribution_parameters=distribution_parameters)
 mdim = mesh.topological_dimension()
 assert mdim == 2
 
@@ -55,9 +55,9 @@ def get_coordinates(msh, el_str):
     return X.dat.data_ro
 
 crds_DGT0 = get_coordinates(mesh, "DGT")
-print(crds_DGT0)
+#print(crds_DGT0)
 crds_subDG0 = get_coordinates(subm, "DG")
-print(crds_subDG0)
+#print(crds_subDG0)
 
 # loop through each coordinate of DGT0 and assign value to correct index of DG0 function
 fs3 = Function(subDG0)
